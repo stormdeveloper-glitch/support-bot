@@ -16,7 +16,23 @@ from support_bot.keyboards import (
     faq_list_kb, faq_answer_kb,
     admin_main_kb, admin_panel_kb, ai_escalate_kb
 )
-from utils.ai_assistant import support_ai_triage
+try:
+    from utils.ai_assistant import support_ai_triage
+except ImportError:
+    # Standalone fallback if utils/ai_assistant.py is not available
+    async def support_ai_triage(text: str, faqs: list, main_bot_username: str) -> dict | None:
+        text_lower = text.lower()
+        for faq in faqs:
+            # faq elements: (id, question, answer, order_num)
+            question = faq[1]
+            answer = faq[2]
+            keywords = [w for w in question.lower().replace("?", "").replace(".", "").replace(",", "").split() if len(w) > 4]
+            if keywords and any(kw in text_lower for kw in keywords):
+                return {
+                    "reply": answer,
+                    "escalate": False
+                }
+        return None
 
 router = Router()
 _ai_pending_messages: dict[int, str] = {}
