@@ -6,7 +6,6 @@ from collections import deque
 import random
 import time
 import aiosqlite
-import aiohttp
 from aiohttp import web
 from aiogram import Bot
 

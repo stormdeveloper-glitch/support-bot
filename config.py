@@ -24,14 +24,6 @@ DB_PATH = os.path.join(DATA_DIR, "bot.db")
 
 # Ma'lumotlar bazasi ulanish sozlamalari
 DATABASE_URL = os.getenv("DATABASE_URL", "")
-MYSQL_URL = os.getenv("MYSQL_URL", "")
-
-# S3 Bucket (Chelak) sozlamalari
-BUCKET = os.getenv("BUCKET", "")
-REGION = os.getenv("REGION", "")
-ENDPOINT = os.getenv("ENDPOINT", "")
-ACCESS_KEY_ID = os.getenv("ACCESS_KEY_ID", "")
-SECRET_ACCESS_KEY = os.getenv("SECRET_ACCESS_KEY", "")
 
 # Papkani yaratish
 os.makedirs(DATA_DIR, exist_ok=True)

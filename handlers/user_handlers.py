@@ -2,14 +2,14 @@
 support_bot/handlers/user_handlers.py
 Foydalanuvchi PM handlerlari (support bot bilan bevosita chat)
 """
-import aiosqlite
+import time
 from datetime import datetime
 from aiogram import Router, F, Bot
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 
-from config import DB_PATH, SUPPORT_GROUP_ID, ADMIN_IDS, SUPER_ADMIN_ID, MAIN_BOT_USERNAME
+from config import SUPPORT_GROUP_ID, ADMIN_IDS, SUPER_ADMIN_ID, MAIN_BOT_USERNAME
 from support_bot.states import SupportUserStates
 from support_bot.keyboards import (
     user_main_kb, cancel_kb, back_kb,
@@ -35,7 +35,17 @@ except ImportError:
         return None
 
 router = Router()
-_ai_pending_messages: dict[int, str] = {}
+# {user_id: {"text": str, "ts": float}} — 30 daqiqadan keyin tozalanadi
+_ai_pending_messages: dict[int, dict] = {}
+_AI_PENDING_TTL = 1800  # 30 daqiqa
+
+
+def _cleanup_pending():
+    """30 daqiqadan eski pending xabarlarni tozalash."""
+    now = time.time()
+    expired = [uid for uid, data in _ai_pending_messages.items() if now - data["ts"] > _AI_PENDING_TTL]
+    for uid in expired:
+        _ai_pending_messages.pop(uid, None)
 
 # ─── Yordamchi funksiyalar ────────────────────────────────────────────────────
 
@@ -150,6 +160,7 @@ async def receive_support_message(message: Message, state: FSMContext, bot: Bot)
     text = message.text
 
     # AI yordamchi javobi
+    _cleanup_pending()  # Eski pending xabarlarni tozalash
     faqs = await _get_faqs()
     triage = await support_ai_triage(text, faqs, MAIN_BOT_USERNAME)
     if triage and triage.get("reply"):
@@ -160,7 +171,7 @@ async def receive_support_message(message: Message, state: FSMContext, bot: Bot)
 
     # Eskalatsiya kerak bo'lmasa ticket yaratmaymiz; user xohlasa tugma orqali yuboradi
     if triage and triage.get("escalate") is False:
-        _ai_pending_messages[message.from_user.id] = text
+        _ai_pending_messages[message.from_user.id] = {"text": text, "ts": time.time()}
         await message.answer(
             "✅ Savolingizga AI yordamchi javob berdi. Agar baribir admin ko'rishini istasangiz, pastdagi tugmani bosing.",
             reply_markup=await _get_main_kb(message.from_user.id),
@@ -189,7 +200,8 @@ async def receive_support_message(message: Message, state: FSMContext, bot: Bot)
 @router.callback_query(F.data == "sup_send_admin")
 async def send_to_admin_after_ai(callback: CallbackQuery, bot: Bot):
     user_id = callback.from_user.id
-    cached_text = _ai_pending_messages.pop(user_id, None)
+    cached = _ai_pending_messages.pop(user_id, None)
+    cached_text = cached["text"] if cached else None
     if not cached_text:
         await callback.answer("❌ Yuboriladigan xabar topilmadi. Qayta yozib yuboring.", show_alert=True)
         return
