@@ -9,6 +9,7 @@ SUPPORT_GROUP_ID     = int(os.getenv("SUPPORT_GROUP_ID", 0))    # Admin guruhi I
 SUPPORT_BOT_USERNAME = os.getenv("SUPPORT_BOT_USERNAME", "")   # Bot username
 SUPER_ADMIN_ID       = int(os.getenv("SUPER_ADMIN_ID", 0))
 ADMIN_IDS            = [int(x) for x in os.getenv("ADMIN_IDS", "").split(",") if x]
+MAIN_BOT_USERNAME    = os.getenv("MAIN_BOT_USERNAME", "")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
