@@ -15,6 +15,16 @@ parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
+# Allow absolute imports starting with 'support_bot' in standalone deployments
+if "support_bot" not in sys.modules:
+    try:
+        import support_bot
+    except ModuleNotFoundError:
+        import types
+        mock_module = types.ModuleType("support_bot")
+        mock_module.__path__ = [os.path.dirname(os.path.abspath(__file__))]
+        sys.modules["support_bot"] = mock_module
+
 from config import SUPPORT_BOT_TOKEN, SUPPORT_GROUP_ID, DB_PATH
 from db_helper import init_db as init_support_db
 
