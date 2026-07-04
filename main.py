@@ -16,7 +16,7 @@ if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
 from config import SUPPORT_BOT_TOKEN, SUPPORT_GROUP_ID, DB_PATH
-from database import init_support_db
+from db_helper import init_db as init_support_db
 
 # --- Live Logging Config ---
 class LiveLogHandler(logging.Handler):
